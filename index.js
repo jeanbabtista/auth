@@ -32,5 +32,11 @@ app.use(
     store: MongoStore.create({
       mongoUrl: db.url,
     }),
+    cookie: { maxAge: 1000 * 60 * 60 * 24 },
   }),
 )
+
+app.get('/', (req, res) => res.json({ msg: 'Hello World!' }))
+
+const PORT = 5000
+app.listen(PORT, () => console.log(`http://localhost:${PORT}`))
