@@ -27,16 +27,17 @@ app.use(express.urlencoded({ extended: true }))
 app.use(
   session({
     secret: 'foo',
-    saveUninitialized: false,
+    saveUninitialized: true,
     resave: false,
-    store: MongoStore.create({
-      mongoUrl: db.url,
-    }),
+    store: MongoStore.create({ mongoUrl: db.url }),
     cookie: { maxAge: 1000 * 60 * 60 * 24 },
   }),
 )
 
-app.get('/', (req, res) => res.json({ msg: 'Hello World!' }))
+app.get('/', (req, res) => {
+  console.log(req.session)
+  res.json({ msg: 'Hello World!' })
+})
 
 const PORT = 5000
 app.listen(PORT, () => console.log(`http://localhost:${PORT}`))
