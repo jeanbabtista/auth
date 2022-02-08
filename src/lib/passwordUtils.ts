@@ -10,7 +10,8 @@ import * as crypto from 'crypto'
  * the decrypted hash/salt with the password that the user provided at login
  */
 export const isValidPassword = (password: string, hash: string, salt: string): boolean => {
-    return true
+    const hashed = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex')
+    return hash === hashed
 }
 
 /**

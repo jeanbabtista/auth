@@ -9,10 +9,10 @@ router.get('/login', auth.getLogin)
 router.post(
     '/login',
     passport.authenticate('local', {
-        failureRedirect: '/login-failure',
-        successRedirect: '/login-success'
+        failureRedirect: '/auth/login-failure',
+        successRedirect: '/auth/login-success'
     }),
-    auth.postLogin
+    auth.postLogin // this never gets executed, since we go to /login-failure or /login-success
 )
 router.get('/register', auth.getRegister)
 router.post('/register', auth.postRegister)

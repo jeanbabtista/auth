@@ -1,16 +1,31 @@
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response } from 'express'
 import { generatePassword } from '../lib/passwordUtils'
 import User from '../models/User'
 
-const postLogin = (err: any, req: Request, res: Response, next: NextFunction) => {
-    if (err) next(err)
+const getIndex = (_req: Request, res: Response) => {
+    const html = `<h1>Home</h1>
+        <a href="/auth/register">Register</a>
+        <p>Already registered?</p>
+        <a href="/auth/login">Login</a>`
+
+    res.send(html)
 }
 
-const postRegister = async (req: Request, res: Response, next: NextFunction) => {
+const getRegister = (_req: Request, res: Response) => {
+    const html = `<h1>Register</h1>
+        <form method="POST" action="/auth/register">
+            Username: <input name="username" />
+            Password: <input type="password" name="password" />
+            <input type="Submit" value="Submit" />
+        </form>`
+
+    res.send(html)
+}
+
+const postRegister = async (req: Request, res: Response) => {
     const { salt, hash } = generatePassword(req.body.password)
     const { username } = req.body
-
-    const user = new User({ username, hash, salt })
+    const user = new User({ username, hash, salt, isAdmin: false })
 
     try {
         const result = await user.save()
@@ -22,15 +37,8 @@ const postRegister = async (req: Request, res: Response, next: NextFunction) => 
     res.redirect('/auth/login')
 }
 
-const getIndex = (req: Request, res: Response, next: NextFunction) => {
-    const html = `<h1>Home</h1>
-        <a href="/auth/register">Register</a>`
-
-    res.send(html)
-}
-
-const getLogin = (req: Request, res: Response, next: NextFunction) => {
-    const html = `s<h1>Login</h1>
+const getLogin = (_req: Request, res: Response) => {
+    const html = `<h1>Login</h1>
         <form method="POST" action="/auth/login">
             Username: <input name="username" />
             Password: <input type="password" name="password" />
@@ -40,33 +48,24 @@ const getLogin = (req: Request, res: Response, next: NextFunction) => {
     res.send(html)
 }
 
-const getRegister = (req: Request, res: Response, next: NextFunction) => {
-    const html = `<h1>Register</h1>
-        <form method="POST" action="/auth/register">
-            Username: <input name="username" />
-            Password: <input type="password" name="password" />
-            <input type="Submit" value="Submit" />
-        </form>`
+const postLogin = () => {}
 
-    res.send(html)
+const getLoginSuccess = (_req: Request, res: Response) => {
+    res.send('Successfully logged in, view protected route')
 }
 
-const getProtected = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated()) return res.send('<h1>Welcome!</h1><a href="/auth/logout">Logout</a>')
-    res.send('<h1>Failed to authenticate!</h1><a href="/auth/login">Login</a>')
+const getLoginFailure = (_req: Request, res: Response) => {
+    res.send('Wrong credentials, log in again')
 }
 
-const getLogout = (req: Request, res: Response, next: NextFunction) => {
-    req.logout()
-    res.redirect('/auth/protected')
+const getProtected = (req: Request, res: Response) => {
+    if (req.isAuthenticated()) return res.send('Welcome! You can now log out.')
+    res.send('Failed to authenticate!')
 }
 
-const getLoginSuccess = (req: Request, res: Response, next: NextFunction) => {
-    res.send('<h1>Successfully logged in</h1><a href="/auth/protected">Protected</a>')
-}
-
-const getLoginFailure = (req: Request, res: Response, next: NextFunction) => {
-    res.send('<h1>Wrong credentials</h1><a href="/auth/login">Login</a>')
+const getLogout = (req: Request, res: Response) => {
+    req.logout() // only deletes req.session.passport.user property
+    res.redirect('/auth')
 }
 
 export default {

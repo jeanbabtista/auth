@@ -12,7 +12,7 @@ const db = {
             await _connect(DB_URL)
             console.log('Successfully connected to database')
         } catch (e: any) {
-            console.log('Error:', e.message)
+            console.log('Error connecting to database:', e.message)
         }
     }
 }
