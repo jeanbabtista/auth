@@ -1,40 +1,15 @@
 import passport from 'passport'
+import bcrypt from 'bcrypt'
 import { IStrategyOptions, Strategy as LocalStrategy, VerifyFunction } from 'passport-local'
 import User from '../models/User'
-import { isValidPassword } from '../lib/passwordUtils'
 
-// default options for verify function callback
-// const options: IStrategyOptions = {
-//     usernameField: 'username',
-//     passwordField: 'password'
-// }
+passport.serializeUser((user: { id?: number }, done) => {
+    console.log('serialize()')
+    return done(null, user.id)
+})
 
-// called after POST login request for `passport.authenticate()` method
-const verify: VerifyFunction = async (username, password, done) => {
-    try {
-        const user = await User.findOne({ username })
-        if (!user) return done(null, false)
-
-        const isValid = isValidPassword(password, user.hash.toString(), user.salt.toString())
-
-        if (isValid)
-            // redirect to /login-success, sends user object forward to passport
-            done(null, user)
-        // redirect to /login-failure
-        else done(null, false)
-    } catch (e: any) {
-        done(e)
-    }
-}
-
-passport.use(new LocalStrategy(/*options,*/ verify))
-
-// (de)serializeUser() functions are only for SessionStrategy (implemented by passport)!
-// populates req.session.passport.user object with user id
-passport.serializeUser((user: { id?: number }, done) => done(null, user.id))
-
-// populates req.user object
 passport.deserializeUser(async (id: number, cb) => {
+    console.log('deserialize()')
     try {
         const user = await User.findById(id)
         cb(null, user)
@@ -42,5 +17,37 @@ passport.deserializeUser(async (id: number, cb) => {
         cb(e)
     }
 })
+
+/**
+ *
+ * @param {String} username - username field for user
+ * @param {String} password - password field for user
+ * @param {Function} done - receives error object as first parameter and user as second.
+ * This object is passed to `deserializeUser()`. There are 3 possible use cases for this function:
+ * 1. `done(err)`, which is used to pass error to next middleware
+ * 2. `done(null, false)`, which indicates that there is no error, but user is not authenticated
+ * 3. `done(null, user)`, which indicates that there is no error and user is successfully authenticated
+ */
+const verify: VerifyFunction = async (username, password, done) => {
+    console.log('verifyCallback()')
+
+    try {
+        const user = await User.findOne({ username })
+        if (!user) return done(null, false)
+
+        // if valid password, redirect to /login-success and send user object to next middleware, else go to /login-failure
+        const isValid = bcrypt.compareSync(password, user.hash.toString())
+        done(null, isValid ? user : false)
+    } catch (e: any) {
+        done(e)
+    }
+}
+
+/* const options: IStrategyOptions = {
+    usernameField: 'username', // default
+    passwordField: 'password' // default
+} */
+
+passport.use(new LocalStrategy(/*options,*/ verify))
 
 export = passport

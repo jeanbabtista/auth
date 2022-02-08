@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { generatePassword } from '../lib/passwordUtils'
+import bcrypt from 'bcrypt'
 import User from '../models/User'
 
 const getIndex = (_req: Request, res: Response) => {
@@ -23,44 +23,49 @@ const getRegister = (_req: Request, res: Response) => {
 }
 
 const postRegister = async (req: Request, res: Response) => {
-    const { salt, hash } = generatePassword(req.body.password)
-    const { username } = req.body
-    const user = new User({ username, hash, salt, isAdmin: false })
+    const { username, password } = req.body
+    const hash = bcrypt.hashSync(password, 10)
+    const user = new User({ username, hash, isAdmin: false })
 
     try {
-        const result = await user.save()
-        console.log('Saved user:', result)
-    } catch (e: any) {
-        console.log('Error saving user:', e.message)
-    }
+        const found = await User.findOne({ username })
+        if (found) throw new Error('User already exists.')
 
-    res.redirect('/auth/login')
+        const saved = await user.save()
+        console.log('Saved user', saved.username)
+        res.redirect('/auth/login')
+    } catch (e: any) {
+        const { message } = e
+        console.log(message)
+        res.redirect('/auth')
+    }
 }
 
 const getLogin = (_req: Request, res: Response) => {
     const html = `<h1>Login</h1>
         <form method="POST" action="/auth/login">
-            Username: <input name="username" />
-            Password: <input type="password" name="password" />
+            <input name="username" />
+            <input type="password" name="password" />
             <input type="Submit" value="Submit" />
         </form>`
 
     res.send(html)
 }
 
-const postLogin = () => {}
+const postLogin = (req: Request, res: Response) => {
+    console.log('POST login')
 
-const getLoginSuccess = (_req: Request, res: Response) => {
-    res.send('Successfully logged in, view protected route')
+    if (req.isAuthenticated()) {
+        console.log('Login successful')
+        return res.redirect('/auth/protected')
+    }
+
+    console.log('Login failed')
+    res.redirect('/auth/login')
 }
 
-const getLoginFailure = (_req: Request, res: Response) => {
-    res.send('Wrong credentials, log in again')
-}
-
-const getProtected = (req: Request, res: Response) => {
-    if (req.isAuthenticated()) return res.send('Welcome! You can now log out.')
-    res.send('Failed to authenticate!')
+const getProtected = (_req: Request, res: Response) => {
+    res.send('Welcome! You can now log out.')
 }
 
 const getLogout = (req: Request, res: Response) => {
@@ -75,7 +80,5 @@ export default {
     getLogin,
     getRegister,
     getProtected,
-    getLogout,
-    getLoginSuccess,
-    getLoginFailure
+    getLogout
 }

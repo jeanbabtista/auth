@@ -1,24 +1,16 @@
 import { Router } from 'express'
 import passport from 'passport'
 import auth from '../../controllers/auth'
+import { isAuthenticated, isAdmin } from '../../middleware/auth'
 
 const router = Router()
 
 router.get('/', auth.getIndex)
 router.get('/login', auth.getLogin)
-router.post(
-    '/login',
-    passport.authenticate('local', {
-        failureRedirect: '/auth/login-failure',
-        successRedirect: '/auth/login-success'
-    }),
-    auth.postLogin // this never gets executed, since we go to /login-failure or /login-success
-)
+router.post('/login', passport.authenticate('local'), auth.postLogin)
 router.get('/register', auth.getRegister)
 router.post('/register', auth.postRegister)
-router.get('/protected', auth.getProtected)
+router.get('/protected', isAuthenticated, isAdmin, auth.getProtected)
 router.get('/logout', auth.getLogout)
-router.get('/login-success', auth.getLoginSuccess)
-router.get('/login-failure', auth.getLoginFailure)
 
 export default router

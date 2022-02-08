@@ -1,17 +1,15 @@
-import { Schema, model } from 'mongoose'
+import { Schema, model, Document } from 'mongoose'
 
-interface User {
-    username: String
-    hash: String
-    salt: String
-    isAdmin: Boolean
+export interface IUser {
+    username: string
+    hash: string
+    isAdmin: boolean
 }
 
-const schema = new Schema<User>({
+const schema = new Schema<IUser>({
     username: { type: String, required: true },
     hash: { type: String, required: true },
-    salt: { type: String, required: true },
-    isAdmin: { type: Boolean, required: true }
+    isAdmin: { type: Boolean, required: true, default: false }
 })
 
-export default model<User>('User', schema)
+export default model<IUser>('User', schema)

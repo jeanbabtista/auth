@@ -6,7 +6,7 @@ import { config } from 'dotenv'
 import db from './config/db'
 import authRoute from './routes/auth'
 
-// config (environment variables, database)
+// config
 config()
 const PORT = Number(process.env.PORT) || 5000
 const app = express()
