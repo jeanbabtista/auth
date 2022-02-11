@@ -1,6 +1,10 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import User from '../models/User'
+import { issueJWT, getJsonMessage } from '../lib/utils'
+import { RequestPostLogin } from '../@types/index'
+
+const tokens: string[] = []
 
 const getIndex = (_req: Request, res: Response) => {
     const html = `<h1>Home</h1>
@@ -31,13 +35,19 @@ const postRegister = async (req: Request, res: Response) => {
         const found = await User.findOne({ username })
         if (found) throw new Error('User already exists.')
 
-        const saved = await user.save()
-        console.log('Saved user', saved.username)
-        res.redirect('/auth/login')
+        const savedUser = await user.save()
+        const { token, expiresIn } = issueJWT(savedUser)
+        tokens.push(token)
+        console.log(tokens.length)
+
+        res.json(
+            getJsonMessage(false, 'Successfully saved user', {
+                token,
+                expiresIn
+            })
+        )
     } catch (e: any) {
-        const { message } = e
-        console.log(message)
-        res.redirect('/auth')
+        res.json(getJsonMessage(true, e.message))
     }
 }
 
@@ -52,25 +62,40 @@ const getLogin = (_req: Request, res: Response) => {
     res.send(html)
 }
 
-const postLogin = (req: Request, res: Response) => {
-    console.log('POST login')
+const postLogin = async (req: Request, res: Response) => {
+    const { username, password } = req.body as RequestPostLogin
 
-    if (req.isAuthenticated()) {
-        console.log('Login successful')
-        return res.redirect('/auth/protected')
+    try {
+        const user = await User.findOne({ username })
+        if (!user) throw new Error('Failed to fetch user in database')
+
+        const isValid = bcrypt.compareSync(password, user.hash.toString())
+        if (!isValid) throw new Error('Wrong password was provided')
+
+        const { token, expiresIn } = issueJWT(user)
+        tokens.push(token)
+        console.log(tokens.length)
+
+        res.status(200).json(
+            getJsonMessage(false, 'Successfully logged in', {
+                token,
+                expiresIn
+            })
+        )
+    } catch (e: any) {
+        res.status(400).json(getJsonMessage(true, e.message))
     }
-
-    console.log('Login failed')
-    res.redirect('/auth/login')
 }
 
 const getProtected = (_req: Request, res: Response) => {
-    res.send('Welcome! You can now log out.')
+    res.status(200).json(
+        getJsonMessage(false, 'Successfully fetched protected route')
+    )
 }
 
 const getLogout = (req: Request, res: Response) => {
-    req.logout() // only deletes req.session.passport.user property
-    res.redirect('/auth')
+    req.logout()
+    res.json(getJsonMessage(false, 'Successfully logged out'))
 }
 
 export default {

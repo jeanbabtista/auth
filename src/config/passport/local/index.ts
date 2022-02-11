@@ -1,13 +1,9 @@
 import passport from 'passport'
 import bcrypt from 'bcrypt'
 import { IStrategyOptions, Strategy as LocalStrategy, VerifyFunction } from 'passport-local'
-import User from '../models/User'
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import User from '../../../models/User'
 
-const path = join(__dirname, '..', '..', 'id_rsa_pub.pem')
-const publicKey = readFileSync(path, 'utf-8')
-
+// lokalna strategija
 passport.serializeUser((user: { id?: number }, done) => {
     console.log('serialize()')
     return done(null, user.id)
@@ -53,6 +49,4 @@ const verify: VerifyFunction = async (username: string, password: string, done: 
     passwordField: 'password' // default
 } */
 
-passport.use(new LocalStrategy(/*options,*/ verify))
-
-export = passport
+export = new LocalStrategy(/*options,*/ verify)

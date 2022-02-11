@@ -4,7 +4,7 @@ import cors from 'cors'
 import { join } from 'path'
 import { config } from 'dotenv'
 import sessionConfig from './config/session'
-import passport from './config/passport'
+import passport from './config/passport/index'
 import db from './config/db'
 import routes from './routes'
 
@@ -18,9 +18,6 @@ db.connect()
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(session(sessionConfig))
-app.use(passport.initialize())
-app.use(passport.session())
 app.use(express.static(join(__dirname, 'public'))) // for angular
 app.use(routes)
 

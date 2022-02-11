@@ -1,11 +1,19 @@
 import { Request } from 'express'
 
-declare namespace Express {
-    interface Request {
-        user: {
-            username: string
-            hash: string
-            isAdmin: boolean
+declare global {
+    namespace Express {
+        export interface Request {
+            jwtToken?: any
+            user?: {
+                username: string
+                hash: string
+                isAdmin: boolean
+            }
         }
     }
+}
+
+export interface RequestPostLogin {
+    username: string
+    password: string
 }
