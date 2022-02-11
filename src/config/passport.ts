@@ -2,19 +2,12 @@ import passport from 'passport'
 import bcrypt from 'bcrypt'
 import { IStrategyOptions, Strategy as LocalStrategy, VerifyFunction } from 'passport-local'
 import User from '../models/User'
-import { readFileSync } from 'fs'
-import { join } from 'path'
-
-const path = join(__dirname, '..', '..', 'id_rsa_pub.pem')
-const publicKey = readFileSync(path, 'utf-8')
 
 passport.serializeUser((user: { id?: number }, done) => {
-    console.log('serialize()')
     return done(null, user.id)
 })
 
 passport.deserializeUser(async (id: number, cb) => {
-    console.log('deserialize()')
     try {
         const user = await User.findById(id)
         cb(null, user)
@@ -34,8 +27,6 @@ passport.deserializeUser(async (id: number, cb) => {
  * 3. `done(null, user)`, which indicates that there is no error and user is successfully authenticated
  */
 const verify: VerifyFunction = async (username: string, password: string, done: Function) => {
-    console.log('verifyCallback()')
-
     try {
         const user = await User.findOne({ username })
         if (!user) return done(null, false)
@@ -48,11 +39,11 @@ const verify: VerifyFunction = async (username: string, password: string, done: 
     }
 }
 
-/* const options: IStrategyOptions = {
+const options: IStrategyOptions = {
     usernameField: 'username', // default
     passwordField: 'password' // default
-} */
+}
 
-passport.use(new LocalStrategy(/*options,*/ verify))
+passport.use(new LocalStrategy(options, verify))
 
 export = passport

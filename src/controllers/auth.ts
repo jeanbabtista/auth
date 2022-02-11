@@ -31,13 +31,10 @@ const postRegister = async (req: Request, res: Response) => {
         const found = await User.findOne({ username })
         if (found) throw new Error('User already exists.')
 
-        const saved = await user.save()
-        console.log('Saved user', saved.username)
-        res.redirect('/auth/login')
+        await user.save()
+        res.status(200).json({ error: false, message: 'Successfully saved new user' })
     } catch (e: any) {
-        const { message } = e
-        console.log(message)
-        res.redirect('/auth')
+        res.status(200).json({ error: true, message: e.message })
     }
 }
 
@@ -53,24 +50,17 @@ const getLogin = (_req: Request, res: Response) => {
 }
 
 const postLogin = (req: Request, res: Response) => {
-    console.log('POST login')
-
-    if (req.isAuthenticated()) {
-        console.log('Login successful')
-        return res.redirect('/auth/protected')
-    }
-
-    console.log('Login failed')
-    res.redirect('/auth/login')
+    if (!req.isAuthenticated()) return res.status(401).json({ error: true, message: 'Failed to log in' })
+    res.status(200).json({ error: false, message: 'Successfully logged in' })
 }
 
 const getProtected = (_req: Request, res: Response) => {
-    res.send('Welcome! You can now log out.')
+    res.status(200).json({ error: false, message: 'Protected data' })
 }
 
 const getLogout = (req: Request, res: Response) => {
     req.logout() // only deletes req.session.passport.user property
-    res.redirect('/auth')
+    res.status(200).json({ error: false, message: 'Successfully logged out' })
 }
 
 export default {
