@@ -93,17 +93,11 @@ const getProtected = (_req: Request, res: Response) => {
     )
 }
 
-const getLogout = (req: Request, res: Response) => {
-    req.logout()
-    res.json(getJsonMessage(false, 'Successfully logged out'))
-}
-
 export default {
     postLogin,
     postRegister,
     getIndex,
     getLogin,
     getRegister,
-    getProtected,
-    getLogout
+    getProtected
 }

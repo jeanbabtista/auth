@@ -10,6 +10,5 @@ router.post('/login', auth.postLogin)
 router.get('/register', auth.getRegister)
 router.post('/register', auth.postRegister)
 router.get('/protected', customJwtCheck, auth.getProtected)
-router.get('/logout', auth.getLogout)
 
 export default router
