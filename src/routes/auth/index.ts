@@ -2,6 +2,7 @@ import { Router } from 'express'
 import passport from 'passport'
 import auth from '../../controllers/auth'
 import { isAuthenticated, isAdmin } from '../../middleware/auth'
+import User from '../../models/User'
 
 const router = Router()
 

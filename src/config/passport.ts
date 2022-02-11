@@ -2,6 +2,11 @@ import passport from 'passport'
 import bcrypt from 'bcrypt'
 import { IStrategyOptions, Strategy as LocalStrategy, VerifyFunction } from 'passport-local'
 import User from '../models/User'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
+const path = join(__dirname, '..', '..', 'id_rsa_pub.pem')
+const publicKey = readFileSync(path, 'utf-8')
 
 passport.serializeUser((user: { id?: number }, done) => {
     console.log('serialize()')
@@ -28,7 +33,7 @@ passport.deserializeUser(async (id: number, cb) => {
  * 2. `done(null, false)`, which indicates that there is no error, but user is not authenticated
  * 3. `done(null, user)`, which indicates that there is no error and user is successfully authenticated
  */
-const verify: VerifyFunction = async (username, password, done) => {
+const verify: VerifyFunction = async (username: string, password: string, done: Function) => {
     console.log('verifyCallback()')
 
     try {

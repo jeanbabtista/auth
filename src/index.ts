@@ -1,10 +1,12 @@
 import express from 'express'
 import session from 'express-session'
+import cors from 'cors'
+import { join } from 'path'
+import { config } from 'dotenv'
 import sessionConfig from './config/session'
 import passport from './config/passport'
-import { config } from 'dotenv'
 import db from './config/db'
-import authRoute from './routes/auth'
+import routes from './routes'
 
 // config
 config()
@@ -13,12 +15,14 @@ const app = express()
 db.connect()
 
 // middleware
+app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(session(sessionConfig))
 app.use(passport.initialize())
 app.use(passport.session())
+app.use(express.static(join(__dirname, 'public'))) // for angular
+app.use(routes)
 
-// routes
-app.use('/auth', authRoute)
+// start server
 app.listen(PORT, () => console.log(`http://localhost:${PORT}/auth`))

@@ -3,13 +3,13 @@ import { config } from 'dotenv'
 
 config()
 
-const DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/test'
+const url = (process.env.NODE_ENV === 'production' ? process.env.DB_URL_PROD : process.env.DB_URL) || ''
 
 const db = {
-    url: DB_URL,
+    url,
     connect: async function () {
         try {
-            await _connect(DB_URL)
+            await _connect(url)
             console.log('Successfully connected to database')
         } catch (e: any) {
             console.log('Error connecting to database:', e.message)

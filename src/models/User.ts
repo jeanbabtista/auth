@@ -1,6 +1,6 @@
 import { Schema, model, Document } from 'mongoose'
 
-export interface IUser {
+export interface IUser extends Document {
     username: string
     hash: string
     isAdmin: boolean
