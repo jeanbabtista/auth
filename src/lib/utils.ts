@@ -29,8 +29,6 @@ const issueJWT = (user: IUser) => {
         algorithm: 'RS256'
     })
 
-    // token needs to be of exact format 'Bearer: <token>', because we are using
-    // Authorization header to retrieve JWT
     return { token: `Bearer ${token}`, expiresIn }
 }
 
