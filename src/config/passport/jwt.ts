@@ -1,5 +1,4 @@
-import passport from 'passport'
-import User, { IUser } from '../models/User'
+import User from '../../models/User'
 import {
     Strategy as JwtStrategy,
     ExtractJwt,
@@ -8,7 +7,7 @@ import {
 } from 'passport-jwt'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { IJwtPayload } from '../lib/utils'
+import { IJwtPayload } from '../../lib/utils'
 
 const path = join(__dirname, '..', '..', 'id_rsa_pub.pem')
 const publicKey = readFileSync(path, 'utf-8')
@@ -32,6 +31,4 @@ const verify: VerifyCallback = async (payload: IJwtPayload, done) => {
     }
 }
 
-passport.use(new JwtStrategy(options, verify))
-
-export = passport
+export = new JwtStrategy(options, verify)

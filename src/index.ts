@@ -1,6 +1,6 @@
 import express from 'express'
 import { config } from 'dotenv'
-import passport from './config/passport'
+import passport from './config/passport/index'
 import db from './config/db'
 import routes from './routes'
 
