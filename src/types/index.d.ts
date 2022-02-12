@@ -23,14 +23,16 @@ declare global {
     namespace Express {
         interface Request {
             body: RequestPostLogin | RequestGoogleCallback
+            currentUser: UserMongoose
         }
 
         interface User {
-            id?: string
+            _id?: string
             email?: string
             googleId?: string
             username?: string
             photo?: string
+            isAdmin: boolean
         }
     }
 }

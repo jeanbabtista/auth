@@ -1,36 +1,9 @@
-import jwt from 'jsonwebtoken'
-import { readFileSync } from 'fs'
-import { join } from 'path'
-import { Types } from 'mongoose'
-import { UserMongoose } from 'types'
+import axios from 'axios'
+import { config } from 'dotenv'
+import { stringify } from 'querystring'
 
-const path = join(__dirname, '..', '..', 'id_rsa_priv.pem')
-const privateKey = readFileSync(path, 'utf-8')
-
-/**
- * @param {Types.ObjectId} sub - holds id of the user
- * @param {number} iat - issuing date of JWT
- */
-export interface IJwtPayload {
-    sub: Types.ObjectId
-    iat: number
-}
-
-/**
- * @param {IUser} user - The user object.  We need this to set the JWT `sub` payload property to the MongoDB user ID
- */
-const issueJWT = (user: UserMongoose) => {
-    const { _id: id } = user
-    const expiresIn = '1d'
-
-    const payload: IJwtPayload = { sub: id, iat: Date.now() }
-    const token = jwt.sign(payload, privateKey, {
-        expiresIn,
-        algorithm: 'RS256'
-    })
-
-    return { token: `Bearer ${token}`, expiresIn }
-}
+config()
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI } = process.env
 
 const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
     error,
@@ -38,4 +11,51 @@ const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
     data
 })
 
-export { issueJWT, getJsonMessage }
+const getGoogleAuthUrl = () => {
+    const url = 'https://accounts.google.com/o/oauth2/v2/auth'
+    const options = stringify({
+        client_id: GOOGLE_CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        scope: [
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile'
+        ].join(' '),
+        access_type: 'offline',
+        prompt: 'consent',
+        response_type: 'code'
+    })
+
+    return `${url}?${options}`
+}
+
+const getTokens = async (
+    code: string
+): Promise<{
+    access_token: string
+    expires_in: Number
+    refresh_token: string
+    scope: string
+    id_token: string
+}> => {
+    const data = stringify({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        grant_type: 'authorization_code'
+    })
+
+    try {
+        const response = await axios.post(
+            'https://oauth2.googleapis.com/token',
+            data,
+            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        )
+
+        return response.data
+    } catch (e: any) {
+        throw new Error(e.message)
+    }
+}
+
+export { getJsonMessage, getGoogleAuthUrl, getTokens }

@@ -1,19 +1,12 @@
-import passport from 'passport'
 import { Router } from 'express'
+import { authenticateJWT } from '../../middleware/auth'
 import auth from '../../controllers/auth'
-import { customJwtCheck } from '../../middleware/auth'
 
 const router = Router()
 
-router.get(
-    '/google',
-    passport.authenticate('google', { scope: ['profile', 'email'] })
-)
-router.get(
-    '/google/callback',
-    passport.authenticate('google', { session: false }),
-    auth.getGoogleCallback
-)
-router.get('/protected', customJwtCheck, auth.getProtected)
+router.get('/google', auth.getGoogleLogin)
+router.get('/google/callback', auth.getGoogleCallback)
+router.get('/', auth.getIndex)
+router.get('/protected', authenticateJWT, auth.getProtected)
 
 export default router
