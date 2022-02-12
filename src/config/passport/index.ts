@@ -1,8 +1,6 @@
 import passport from 'passport'
-import jwtStrategy from './jwt'
-import oauthStrategy from './oauth'
+import oauthStrategy from '../../config/passport/oauth'
 
-passport.use(jwtStrategy)
 passport.use(oauthStrategy)
 
 export = passport
