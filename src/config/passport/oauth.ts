@@ -34,7 +34,10 @@ const verify: VerifyFunctionWithRequest = async (
         const found = await User.findOne({ googleId })
 
         // user already exists
-        if (found) return done(null, found)
+        if (found) {
+            request.currentUser = found
+            return done(null, found)
+        }
 
         // register user
         const user = await new User({ email, googleId, username, photo }).save()

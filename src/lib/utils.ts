@@ -3,8 +3,15 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import { IJwtPayload, UserMongoose } from 'types'
 
-const path = join(__dirname, '..', '..', 'id_rsa_priv.pem')
-const privateKey = readFileSync(path, 'utf-8')
+const publicKey = readFileSync(
+    join(__dirname, '..', '..', 'id_rsa_pub.pem'),
+    'utf-8'
+)
+
+const privateKey = readFileSync(
+    join(__dirname, '..', '..', 'id_rsa_priv.pem'),
+    'utf-8'
+)
 
 const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
     error,
@@ -12,17 +19,21 @@ const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
     data
 })
 
-const issueJWT = (user: UserMongoose) => {
-    const { _id: id } = user
-    const expiresIn = '1d'
+const issueToken = (data: any) =>
+    jwt.sign(data, privateKey, { algorithm: 'RS256' })
 
-    const payload: IJwtPayload = { sub: id, iat: Date.now() }
-    const token = jwt.sign(payload, privateKey, {
-        expiresIn,
-        algorithm: 'RS256'
-    })
+const verifyToken = (token: string) =>
+    jwt.verify(token, publicKey, { algorithms: ['RS256'] })
 
-    return { token: `Bearer ${token}`, expiresIn }
+const getToken = (data: any) => {
+    console.log('getToken(data):', data)
+
+    const user = <UserMongoose>data
+
+    const payload: IJwtPayload = { sub: user._id, iat: Date.now() }
+    const token = issueToken(payload)
+
+    return token
 }
 
-export { issueJWT, getJsonMessage }
+export { getToken, verifyToken, getJsonMessage }
