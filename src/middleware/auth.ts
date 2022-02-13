@@ -1,37 +1,24 @@
 import { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
-import { readFileSync } from 'fs'
-import { join } from 'path'
-import { getJsonMessage } from '../lib/utils'
+import { getJsonMessage, verifyToken } from '../lib/utils'
+import User from '../models/User'
 
-const path = join(__dirname, '..', '..', 'id_rsa_pub.pem')
-const publicKey = readFileSync(path, 'utf-8')
-
-const customJwtCheck = (req: Request, res: Response, next: NextFunction) => {
-    const { authorization } = req.headers
-    if (!authorization)
-        return res
-            .status(401)
-            .json(getJsonMessage(true, 'No authorization header'))
-
-    // check authorization header format
-    const [name, token] = authorization.split(' ')
-    if (name !== 'Bearer' || !token.match(/\S+\.\S+\.\S+/))
-        return res
-            .status(401)
-            .json(getJsonMessage(true, 'Wrong authorization header format'))
-
-    // check if valid signature
+const authenticateJWT = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
-        const validToken = jwt.verify(token, publicKey, {
-            algorithms: ['RS256']
-        })
+        const token = req.cookies['authorization_token']
+        const decoded = verifyToken(token)
 
-        req.jwtToken = validToken
+        const user = await User.findById(decoded.sub)
+        if (!user) throw new Error('user not found')
+
+        req.currentUser = user
         next()
     } catch (e: any) {
-        res.status(401).json(getJsonMessage(true, 'Invalid token'))
+        res.status(401).json(getJsonMessage(true, e.message))
     }
 }
 
-export { customJwtCheck }
+export { authenticateJWT }

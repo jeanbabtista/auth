@@ -1,47 +1,42 @@
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { Types } from 'mongoose'
-import { IUser } from '../models/User'
+import { IJwtPayload, UserMongoose } from 'types'
 
-const path = join(__dirname, '..', '..', 'id_rsa_priv.pem')
-const privateKey = readFileSync(path, 'utf-8')
+const publicKey = readFileSync(
+    join(__dirname, '..', '..', 'id_rsa_pub.pem'),
+    'utf-8'
+)
+const privateKey = readFileSync(
+    join(__dirname, '..', '..', 'id_rsa_priv.pem'),
+    'utf-8'
+)
 
-/**
- * @param {Types.ObjectId} sub - holds id of the user
- * @param {number} iat - issuing date of JWT
- */
-export interface IJwtPayload {
-    sub: Types.ObjectId
-    iat: number
-}
-
-/**
- * @param {IUser} user - The user object.  We need this to set the JWT `sub` payload property to the MongoDB user ID
- */
-const issueJWT = (user: IUser) => {
-    const { _id: id } = user
-    const expiresIn = '1d'
-
-    const payload: IJwtPayload = { sub: id, iat: Date.now() }
-    const token = jwt.sign(payload, privateKey, {
-        expiresIn,
-        algorithm: 'RS256'
-    })
-
-    // token needs to be of exact format 'Bearer: <token>', because we are using
-    // Authorization header to retrieve JWT
-    return { token: `Bearer ${token}`, expiresIn }
-}
-
-const getJsonMessage = (
-    error: Boolean,
-    message: string,
-    data?: { token: string; expiresIn: string }
-) => ({
+const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
     error,
     message,
     data
 })
 
-export { issueJWT, getJsonMessage }
+const getHash = (password: string) => bcrypt.hashSync(password, 10)
+
+const isValidPassword = (password: string, hash: string) =>
+    bcrypt.compareSync(password, hash)
+
+const issueToken = (data: any) =>
+    jwt.sign(data, privateKey, { algorithm: 'RS256' })
+
+const verifyToken = (token: string) =>
+    jwt.verify(token, publicKey, { algorithms: ['RS256'] })
+
+const getToken = (data: any) => {
+    const user = <UserMongoose>data
+
+    const payload: IJwtPayload = { sub: user._id, iat: Date.now() }
+    const token = issueToken(payload)
+
+    return token
+}
+
+export { getHash, isValidPassword, getToken, verifyToken, getJsonMessage }
