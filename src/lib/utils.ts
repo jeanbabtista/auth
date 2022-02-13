@@ -1,9 +1,21 @@
 import axios from 'axios'
+import jwt from 'jsonwebtoken'
 import { config } from 'dotenv'
 import { stringify } from 'querystring'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 
 config()
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI } = process.env
+
+const publicKey = readFileSync(
+    join(__dirname, '..', '..', 'id_rsa_pub.pem'),
+    'utf-8'
+)
+const privateKey = readFileSync(
+    join(__dirname, '..', '..', 'id_rsa_priv.pem'),
+    'utf-8'
+)
 
 const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
     error,
@@ -58,4 +70,10 @@ const getTokens = async (
     }
 }
 
-export { getJsonMessage, getGoogleAuthUrl, getTokens }
+const issueToken = (data: any) =>
+    jwt.sign(data, privateKey, { algorithm: 'RS256' })
+
+const verifyToken = (token: string) =>
+    jwt.verify(token, publicKey, { algorithms: ['RS256'] })
+
+export { getJsonMessage, getGoogleAuthUrl, getTokens, issueToken, verifyToken }

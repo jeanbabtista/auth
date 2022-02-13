@@ -1,15 +1,12 @@
-import { NextFunction, Request, Response } from 'express'
+import { Request, Response } from 'express'
 import axios from 'axios'
-import jwt from 'jsonwebtoken'
-import { join } from 'path'
-import { readFileSync } from 'fs'
-import { getJsonMessage, getTokens, getGoogleAuthUrl } from '../lib/utils'
+import {
+    getJsonMessage,
+    getTokens,
+    getGoogleAuthUrl,
+    issueToken
+} from '../lib/utils'
 import User from '../models/User'
-
-const privateKey = readFileSync(
-    join(__dirname, '..', '..', 'id_rsa_priv.pem'),
-    'utf-8'
-)
 
 const getIndex = (_req: Request, res: Response) =>
     res.json(getJsonMessage(false, 'Hello World! Everyone can see this!'))
@@ -39,7 +36,7 @@ const getGoogleCallback = async (req: Request, res: Response) => {
         const found = await User.findOne({ googleId })
         if (!found) await new User({ googleId, email, username, photo }).save()
 
-        const token = jwt.sign(data, privateKey, { algorithm: 'RS256' })
+        const token = issueToken(data)
 
         res.cookie('authorization_token', token, {
             maxAge: 900000,
