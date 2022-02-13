@@ -1,8 +1,10 @@
 import express from 'express'
 import { config } from 'dotenv'
-import passport from './config/passport'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import db from './config/db'
 import routes from './routes'
+import passport from './config/passport'
 
 // config
 config()
@@ -11,6 +13,8 @@ const app = express()
 db.connect()
 
 // middleware
+app.use(cors({ credentials: true }))
+app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(passport.initialize())
