@@ -3,7 +3,10 @@ import { config } from 'dotenv'
 
 config()
 
-const url = (process.env.NODE_ENV === 'production' ? process.env.DB_URL_PROD : process.env.DB_URL) || ''
+const url =
+    (process.env.NODE_ENV === 'production'
+        ? process.env.DB_URL_PROD
+        : process.env.DB_URL) || ''
 
 const db = {
     url,
