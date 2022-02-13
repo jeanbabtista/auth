@@ -2,7 +2,6 @@ import express from 'express'
 import { config } from 'dotenv'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import jsonErrorHandler from 'express-json-error-handler'
 import passport from './config/passport'
 import db from './config/db'
 import routes from './routes'
@@ -18,7 +17,6 @@ app.use(cors({ credentials: true }))
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(jsonErrorHandler())
 app.use(passport.initialize())
 app.use(routes)
 
