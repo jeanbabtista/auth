@@ -1,24 +1,17 @@
 import jwt from 'jsonwebtoken'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { Types } from 'mongoose'
-import { UserMongoose } from 'types'
+import { IJwtPayload, UserMongoose } from 'types'
 
 const path = join(__dirname, '..', '..', 'id_rsa_priv.pem')
 const privateKey = readFileSync(path, 'utf-8')
 
-/**
- * @param {Types.ObjectId} sub - holds id of the user
- * @param {number} iat - issuing date of JWT
- */
-export interface IJwtPayload {
-    sub: Types.ObjectId
-    iat: number
-}
+const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
+    error,
+    message,
+    data
+})
 
-/**
- * @param {IUser} user - The user object.  We need this to set the JWT `sub` payload property to the MongoDB user ID
- */
 const issueJWT = (user: UserMongoose) => {
     const { _id: id } = user
     const expiresIn = '1d'
@@ -31,11 +24,5 @@ const issueJWT = (user: UserMongoose) => {
 
     return { token: `Bearer ${token}`, expiresIn }
 }
-
-const getJsonMessage = (error: Boolean, message: string, data?: any) => ({
-    error,
-    message,
-    data
-})
 
 export { issueJWT, getJsonMessage }

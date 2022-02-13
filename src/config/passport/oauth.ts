@@ -38,7 +38,7 @@ const verify: VerifyFunctionWithRequest = async (
 
         // register user
         const user = await new User({ email, googleId, username, photo }).save()
-        request.user = user
+        request.currentUser = user
         done(null, user)
     } catch (e: any) {
         done(e)

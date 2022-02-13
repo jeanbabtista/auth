@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { getJsonMessage } from '../lib/utils'
-import User from '../models/User'
+import { UserMongoose } from 'types'
+import User from 'models/User'
 
 const path = join(__dirname, '..', '..', 'id_rsa_pub.pem')
 const publicKey = readFileSync(path, 'utf-8')
@@ -40,8 +41,21 @@ const customJwtCheck = async (
         const { sub: id } = validToken
         const user = await User.findById(id)
 
-        if (!user) req.user = {}
-        else req.user = user
+        if (user) req.currentUser = user
+        next()
+    } catch (e: any) {
+        res.status(401).json(getJsonMessage(true, e.message))
+    }
+}
+
+const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = req.cookies['authorization_token']
+        const decoded = <UserMongoose>(
+            jwt.verify(token, publicKey, { algorithms: ['RS256'] })
+        )
+
+        req.currentUser = decoded
         next()
     } catch (e: any) {
         res.status(401).json(getJsonMessage(true, e.message))
